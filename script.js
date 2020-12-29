@@ -1,5 +1,5 @@
 let squareArray = [];
-let boardX, boardY, onTurn;
+let boardX, boardY, onTurn, mouseOnBoard;
 
 
 function setup(){
@@ -43,10 +43,13 @@ function draw() {
    if((0 <= mouseX && mouseX <= canvas.width) && (0 <= mouseY && mouseY <= canvas.height)){
       boardX = Math.floor(mouseX/(canvas.width/15));
       boardY = Math.floor(mouseY/(canvas.height/15));
+      mouseOnBoard = true;
    }
+   else mouseOnBoard = false;
+
    if (typeof conn !== 'undefined') {
-      if(mouseIsPressed && onTurn){
-         if(!checkSquareOccupied(squareArray)){
+      if(mouseIsPressed && onTurn && mouseOnBoard){
+         if(!checkSquareOccupied(squareArray, boardX, boardY)[0]){
             squareArray.push({host: host, x: boardX, y: boardY});
             console.log(squareArray);
             conn.send(squareArray);
@@ -70,16 +73,13 @@ function drawLastMove(squareArray){
    }
 }
 
-function checkSquareOccupied(squareArray){
-   if((0 <= mouseX && mouseX <= canvas.width) && (0 <= mouseY && mouseY <= canvas.height)){
+function checkSquareOccupied(squareArray,x,y){
       for (let i = 0; i < squareArray.length; i++) {
-         if (squareArray[i].x == boardX && squareArray[i].y == boardY) {
-            return true;
+         if (squareArray[i].x == x && squareArray[i].y == y) {
+            return [true, squareArray[i]];
          }
       }
-      return false;
-   }
-   else return true;
+      return [false];
 }
 
 document.getElementById("reset").onclick = function(){
@@ -92,12 +92,25 @@ document.getElementById("reset").onclick = function(){
 			line(0, y, width, y);
 		}
    }
-   onTurn = false;
    squareArray = [];
 }
 
 function checkWinCondition(squareArray){
-   let v1 = createVector(1,1);
-   let v2 = createVector(2,2);
-   console.log();
+   let dir = [[-1,-1],[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0]];
+   if (squareArray.length > 0) {
+      let x = squareArray[squareArray.length-1].x;
+      let y = squareArray[squareArray.length-1].y;
+      fillSquare(x,y,color(255,0,0));
+      for (let i = 0; i < dir.length; i++) {
+         if(checkSquareOccupied(squareArray,x+dir[i][0],y+dir[i][1])[0] && checkSquareOccupied(squareArray,x+dir[i][0],y+dir[i][1])[1].host == host){
+            
+            console.log("square occupied in dir by same player:", dir[i]);
+         }
+      }
+   }
+}
+
+function fillSquare(x,y,color) {
+   fill(color);
+   rect(x*(canvas.width/15), y*(canvas.height/15),canvas.width/15,canvas.height/15);
 }
