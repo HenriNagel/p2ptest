@@ -1,5 +1,5 @@
 let squareArray = [];
-let boardX, boardY, onTurn, mouseOnBoard, winCount = 0, gameEnd = false, hitArray = [];
+let boardX, boardY, onTurn, mouseOnBoard, winCount = 0, otherWinCount = 0, gameEnd = false, hitArray = [], reset = false;
 
 
 function setup(){
@@ -9,7 +9,7 @@ function setup(){
       canvas = createCanvas(Math.round(windowHeight*0.9), Math.round(windowHeight*0.9));
    }
    else canvas = createCanvas(Math.round(windowWidth*0.9), Math.round(windowWidth*0.9));
-   let canvasX = (windowWidth - width) / 2;
+   let canvasX = (windowWidth - width) / 10;
    let canvasY = (windowHeight - height) / 2;
    canvas.position(canvasX, canvasY);
    for (var x = 0; x < width; x += width / 15) {
@@ -19,7 +19,9 @@ function setup(){
 			line(x, 0, x, height);
 			line(0, y, width, y);
 		}
-	}
+   }
+   canvas.hide();
+   document.getElementById("score").innerHTML = "0:0";
 }
 
 function draw() {
@@ -39,7 +41,21 @@ function draw() {
          onTurn = false;
       }
    }
-  
+   if (reset) {
+      background(255);
+      for (var x = 0; x < width; x += width / 15) {
+         for (var y = 0; y < height; y += height / 15) {
+            stroke(0);
+            strokeWeight(1);
+            line(x, 0, x, height);
+            line(0, y, width, y);
+         }
+      }
+      squareArray = [];
+      document.getElementById("reset").style.visibility = "hidden";
+      host = !host;
+      reset = false;
+   }
    if((0 <= mouseX && mouseX <= canvas.width) && (0 <= mouseY && mouseY <= canvas.height)){
       boardX = Math.floor(mouseX/(canvas.width/15));
       boardY = Math.floor(mouseY/(canvas.height/15));
@@ -48,6 +64,7 @@ function draw() {
    else mouseOnBoard = false;
 
    if (typeof conn !== 'undefined') {
+      document.getElementById("connSetup").style.visibility = "hidden";
       if (!gameEnd) { 
          if(mouseIsPressed && onTurn && mouseOnBoard){
             if(!checkSquareOccupied(squareArray, boardX, boardY)[0]){
@@ -56,7 +73,7 @@ function draw() {
                if (checkWinCondition(squareArray)[0]){
                   gameEnd = true;
                   winCount++;
-                  conn.send({gameEnd: true, hitArray: checkWinCondition(squareArray)[1]});
+                  conn.send({gameEnd: true, hitArray: checkWinCondition(squareArray)[1], myWinCount: winCount});
                }
                console.log({squareArray: squareArray});
             }
@@ -68,6 +85,8 @@ function draw() {
          console.log("game end");
          console.log("hitArray", hitArray);
          visualiseWinningRow(hitArray, squareArray);
+         document.getElementById("score").innerHTML = winCount + ":" + otherWinCount;
+         document.getElementById("reset").style.visibility = "visible";
          gameEnd = false;
       }
    }
@@ -106,8 +125,12 @@ document.getElementById("reset").onclick = function(){
 			line(0, y, width, y);
 		}
    }
+   document.getElementById("reset").style.visibility = "hidden";
    squareArray = [];
+   host = !host;
+   conn.send({reset: true});
 }
+
 
 function checkWinCondition(squareArray){
    hitArray = [];
@@ -154,14 +177,12 @@ function visualiseWinningRow(hitArray, squareArray) {
    for (let i = 0; i < squareArray.length; i++) {
       fillSquare(squareArray[i].x, squareArray[i].y, color(255,255,255));
       if (host == squareArray[i].host) {
-         console.log("ich war dort");
          fillSquare(squareArray[i].x, squareArray[i].y, color(255,0,0,100));
       }
       else fillSquare(squareArray[i].x, squareArray[i].y, color(0,0,255,100));
    }
    for (let ii = 0; ii < hitArray.length; ii++) {
       if (host == squareArray[squareArray.length-1].host) {
-         console.log("ich war hier");
          fillSquare(hitArray[ii][0], hitArray[ii][1], color(255,0,0,255));
       }
       else fillSquare(hitArray[ii][0], hitArray[ii][1], color(0,0,255,255));

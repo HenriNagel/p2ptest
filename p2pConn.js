@@ -10,6 +10,8 @@ let host;
 //listen for messages from other peer 
 peer.on("connection", function(c){
    console.log("connected with:", c.peer);
+   canvas.show();
+   document.getElementById("gameInfo").style.visibility = "visible"; 
    //get other PeerID on first connection to establish connection declining if conn is undefined --> if hosting
    if(conn == undefined){
       conn = peer.connect(c.peer);
@@ -18,9 +20,14 @@ peer.on("connection", function(c){
    c.on("data", function(data){
       console.log("RECEIVED:", data);
       message = data;
+      if (data.reset !== undefined) {
+         reset = data.reset;
+         console.log("ich war hier in ß2ß");
+      }
       if (data.gameEnd !== undefined) {
          gameEnd = data.gameEnd;
          hitArray = data.hitArray;
+         otherWinCount = data.myWinCount;
       }
       if (data.squareArray !== undefined) {
          squareArray = data.squareArray;

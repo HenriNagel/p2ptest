@@ -1,0 +1,67 @@
+#connSetup {
+   position: absolute;
+   left: 50%;
+   top: 50%;
+   -webkit-transform: translate(-50%, -50%);
+   transform: translate(-50%, -50%); 
+   height: 50px;
+   width: 300px;
+}
+
+#buttons {
+   width: 200px;
+   margin: auto;
+}
+
+#connInfos {
+   font-size: 20px;
+   text-align: center;
+   font-family: 'Ubuntu Mono', monospace;
+}
+
+.btn-group button {
+   background-color: #354269; /* Green background */
+   border: 1px solid black; /* Green border */
+   color: white; /* White text */
+   padding: 10px 24px; /* Some padding */
+   cursor: pointer; /* Pointer/hand icon */
+   float: left; /* Float the buttons side by side */
+ }
+ 
+ .btn-group button:not(:last-child) {
+   border-right: none; /* Prevent double borders */
+ }
+ 
+ /* Clear floats (clearfix hack) */
+ .btn-group:after {
+   content: "";
+   clear: both;
+   display: table;
+ }
+ 
+ /* Add a background color on hover */
+ .btn-group button:hover {
+   background-color: #6269cc;
+ }
+
+ #gameInfo {
+    float: right;
+    justify-content: center;
+    display: flex;
+    height: 95vh;
+    width: 20%;
+    vertical-align: middle;
+    display: table-cell;
+    visibility: hidden;
+ }
+
+ #gameData {
+   position: relative;
+   top: 50%; left: 50%;
+   transform: translate(-50%,-50%);
+   text-align: center;
+ }
+
+ #reset {
+    visibility: hidden;
+ }
