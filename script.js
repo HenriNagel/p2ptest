@@ -1,5 +1,5 @@
 let squareArray = [];
-let boardX, boardY, onTurn, mouseOnBoard;
+let boardX, boardY, onTurn, mouseOnBoard, winCount = 0, gameEnd = false, hitArray = [];
 
 
 function setup(){
@@ -48,15 +48,29 @@ function draw() {
    else mouseOnBoard = false;
 
    if (typeof conn !== 'undefined') {
-      if(mouseIsPressed && onTurn && mouseOnBoard){
-         if(!checkSquareOccupied(squareArray, boardX, boardY)[0]){
-            squareArray.push({host: host, x: boardX, y: boardY});
-            console.log(squareArray);
-            conn.send(squareArray);
+      if (!gameEnd) { 
+         if(mouseIsPressed && onTurn && mouseOnBoard){
+            if(!checkSquareOccupied(squareArray, boardX, boardY)[0]){
+               squareArray.push({host: host, x: boardX, y: boardY});
+               conn.send({squareArray: squareArray});
+               if (checkWinCondition(squareArray)[0]){
+                  gameEnd = true;
+                  winCount++;
+                  conn.send({gameEnd: true, hitArray: checkWinCondition(squareArray)[1]});
+               }
+               console.log({squareArray: squareArray});
+            }
          }
+         else drawLastMove(squareArray);
       }
-      else drawLastMove(squareArray);
-  }
+      else{
+         drawLastMove(squareArray);
+         console.log("game end");
+         console.log("hitArray", hitArray);
+         visualiseWinningRow(hitArray, squareArray);
+         gameEnd = false;
+      }
+   }
 }
 
 function drawLastMove(squareArray){
@@ -79,7 +93,7 @@ function checkSquareOccupied(squareArray,x,y){
             return [true, squareArray[i]];
          }
       }
-      return [false];
+      return [false, [{host: undefined, x: undefined, y: undefined}]];
 }
 
 document.getElementById("reset").onclick = function(){
@@ -96,21 +110,60 @@ document.getElementById("reset").onclick = function(){
 }
 
 function checkWinCondition(squareArray){
+   hitArray = [];
    let dir = [[-1,-1],[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0]];
    if (squareArray.length > 0) {
       let x = squareArray[squareArray.length-1].x;
       let y = squareArray[squareArray.length-1].y;
-      fillSquare(x,y,color(255,0,0));
       for (let i = 0; i < dir.length; i++) {
          if(checkSquareOccupied(squareArray,x+dir[i][0],y+dir[i][1])[0] && checkSquareOccupied(squareArray,x+dir[i][0],y+dir[i][1])[1].host == host){
-            
-            console.log("square occupied in dir by same player:", dir[i]);
+            let hits = 2;
+            hitArray.push([x+dir[i][0],y+dir[i][1]]);
+            hitArray.push([x,y]);
+            for (let ii = 2; true; ii++) {
+               if(checkSquareOccupied(squareArray,x+(ii*dir[i][0]),y+(ii*dir[i][1]))[0] && checkSquareOccupied(squareArray,x+(ii*dir[i][0]),y+(ii*dir[i][1]))[1].host == host){
+                  hits++;
+                  hitArray.push([x+(ii*dir[i][0]),y+(ii*dir[i][1])]);
+               }
+               else break;
+            }
+            for (let iii = 1; true; iii++) {
+               if (checkSquareOccupied(squareArray,x-(iii*dir[i][0]),y-(iii*dir[i][1]))[0] && checkSquareOccupied(squareArray,x-(iii*dir[i][0]),y-(iii*dir[i][1]))[1].host == host){
+                  hits++;
+                  hitArray.push([x-(iii*dir[i][0]),y-(iii*dir[i][1])]);
+               }
+               else break;
+            }
+            if(hits == 4){
+               console.log("hitArray from inside:",hitArray);
+               return [true, hitArray];
+            }
          }
       }
+      return false;
    }
+   return false;
 }
 
 function fillSquare(x,y,color) {
    fill(color);
    rect(x*(canvas.width/15), y*(canvas.height/15),canvas.width/15,canvas.height/15);
+}
+
+function visualiseWinningRow(hitArray, squareArray) {
+   for (let i = 0; i < squareArray.length; i++) {
+      fillSquare(squareArray[i].x, squareArray[i].y, color(255,255,255));
+      if (host == squareArray[i].host) {
+         console.log("ich war dort");
+         fillSquare(squareArray[i].x, squareArray[i].y, color(255,0,0,100));
+      }
+      else fillSquare(squareArray[i].x, squareArray[i].y, color(0,0,255,100));
+   }
+   for (let ii = 0; ii < hitArray.length; ii++) {
+      if (host == squareArray[squareArray.length-1].host) {
+         console.log("ich war hier");
+         fillSquare(hitArray[ii][0], hitArray[ii][1], color(255,0,0,255));
+      }
+      else fillSquare(hitArray[ii][0], hitArray[ii][1], color(0,0,255,255));
+   }
 }

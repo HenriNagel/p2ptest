@@ -18,7 +18,13 @@ peer.on("connection", function(c){
    c.on("data", function(data){
       console.log("RECEIVED:", data);
       message = data;
-      squareArray = data;
+      if (data.gameEnd !== undefined) {
+         gameEnd = data.gameEnd;
+         hitArray = data.hitArray;
+      }
+      if (data.squareArray !== undefined) {
+         squareArray = data.squareArray;
+      }
    });
    //logs any error from the connection that may occur 
    c.on("error", function(err){console.log(err)});
